@@ -92,9 +92,11 @@ coder linear create "Fix bug" --description "Details here"
 coder linear create --ai "Add user authentication with JWT tokens"  # AI-generated ticket
 coder linear create --ai "Fix login bug" --style tldr              # Short and sweet
 coder linear create --ai "Implement OAuth" --style detailed        # Comprehensive with codebase details
+coder linear create --ai "Add feature X" --with-context           # AI-generated with active tickets context (avoids duplicates)
 coder linear update PROJ-123 --status "Done"
 coder linear update PROJ-123 --comment "Fixed in PR #456"
 coder linear update PROJ-123 --ai "Add acceptance criteria" --style descriptive  # AI-improved ticket
+coder linear update PROJ-123 --ai "Improve description" --with-context  # AI-improved with context from other active tickets
 coder linear link PROJ-123 https://github.com/owner/repo/pull/456
 ```
 
@@ -128,8 +130,13 @@ coder config list     # list available profiles
    - `descriptive`: Balanced with structure, context, and acceptance criteria (default)
    - `detailed`: Comprehensive with codebase references, technical details, and thorough requirements
 3. AI generates a well-structured title and description matching the selected style
-4. **Editing tickets**: Provide improvement instructions with `--ai` on update command
-5. AI analyzes current ticket content and applies your requested changes using the selected style
+4. Use `--with-context` to include active tickets (TODO, Backlog, In Progress, In Review) as context:
+   - Helps avoid creating duplicate tickets
+   - References related work when applicable
+   - Ensures new tickets are distinct and add value
+   - Similar to how code review uses codebase context (guidelines + diff)
+5. **Editing tickets**: Provide improvement instructions with `--ai` on update command
+6. AI analyzes current ticket content and applies your requested changes using the selected style
 
 ### Config Resolution
 

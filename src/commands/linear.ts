@@ -9,9 +9,11 @@ import {
   linkPR,
   formatIssue,
   listTeams,
+  getActiveIssues,
 } from '../lib/linear-api.js'
 import { generateTicketWithAI, editTicketWithAI } from '../lib/anthropic.js'
 import type { TicketStyle } from '../prompts/ticket.js'
+import { formatTicketsForContext } from '../prompts/ticket.js'
 
 function requireLinearKey(apiKey: string | undefined): string {
   if (!apiKey) {
@@ -111,13 +113,19 @@ export function registerLinearCommand(program: Command): void {
     .option('--description <text>', 'Issue description')
     .option('--ai <prompt>', 'Use AI to generate ticket from a prompt (requires ANTHROPIC_API_KEY)')
     .option('--style <style>', 'Ticket style: tldr, descriptive (default), or detailed', 'descriptive')
+    .option('--with-context', 'Include active tickets as context to avoid duplicates (requires --ai)')
     .option('--env <profile>', 'Use a named configuration profile')
-    .action(async (title: string | undefined, opts: { description?: string; ai?: string; style?: string; env?: string }) => {
+    .action(async (title: string | undefined, opts: { description?: string; ai?: string; style?: string; withContext?: boolean; env?: string }) => {
       const config = loadConfig(opts.env)
       const apiKey = requireLinearKey(config.linearApiKey)
 
       if (!config.linearTeamId) {
         console.error(chalk.red('LINEAR_TEAM_ID is not set. Required for creating issues.'))
+        process.exit(1)
+      }
+
+      if (opts.withContext && !opts.ai) {
+        console.error(chalk.red('--with-context requires --ai flag'))
         process.exit(1)
       }
 
@@ -140,10 +148,24 @@ export function registerLinearCommand(program: Command): void {
           process.exit(1)
         }
 
+        let activeTicketsContext: string | undefined
+        if (opts.withContext) {
+          console.log(chalk.bold('Fetching active tickets for context...'))
+          try {
+            const activeIssues = await getActiveIssues(apiKey, config.linearTeamId)
+            activeTicketsContext = formatTicketsForContext(activeIssues)
+            console.log(chalk.green(`✓ Found ${activeIssues.length} active ticket(s) for context`))
+          } catch (error) {
+            console.warn(chalk.yellow(`Warning: Failed to fetch active tickets: ${error instanceof Error ? error.message : String(error)}`))
+            console.warn(chalk.yellow('Continuing without context...'))
+          }
+        }
+
         const styleLabel = ticketStyle === 'tldr' ? 'TLDR' : ticketStyle === 'detailed' ? 'Detailed' : 'Descriptive'
-        console.log(chalk.bold(`Generating ticket with AI (${styleLabel} style)...`))
+        const contextLabel = opts.withContext ? ' (with context)' : ''
+        console.log(chalk.bold(`Generating ticket with AI (${styleLabel} style${contextLabel})...`))
         try {
-          const ticket = await generateTicketWithAI(config.anthropicApiKey, opts.ai, ticketStyle, title)
+          const ticket = await generateTicketWithAI(config.anthropicApiKey, opts.ai, ticketStyle, title, activeTicketsContext)
           finalTitle = ticket.title
           finalDescription = ticket.description
           console.log(chalk.green('✓ AI-generated ticket content'))
@@ -171,17 +193,23 @@ export function registerLinearCommand(program: Command): void {
     .option('--comment <text>', 'Add a comment')
     .option('--ai <prompt>', 'Use AI to improve/edit ticket title and description based on prompt')
     .option('--style <style>', 'Ticket style: tldr, descriptive (default), or detailed', 'descriptive')
+    .option('--with-context', 'Include other active tickets as context (requires --ai)')
     .option('--env <profile>', 'Use a named configuration profile')
     .action(
       async (
         issueId: string,
-        opts: { status?: string; comment?: string; ai?: string; style?: string; env?: string }
+        opts: { status?: string; comment?: string; ai?: string; style?: string; withContext?: boolean; env?: string }
       ) => {
         const config = loadConfig(opts.env)
         const apiKey = requireLinearKey(config.linearApiKey)
 
         if (!opts.status && !opts.comment && !opts.ai) {
           console.error(chalk.red('At least one of --status, --comment, or --ai required.'))
+          process.exit(1)
+        }
+
+        if (opts.withContext && !opts.ai) {
+          console.error(chalk.red('--with-context requires --ai flag'))
           process.exit(1)
         }
 
@@ -211,16 +239,33 @@ export function registerLinearCommand(program: Command): void {
 
           console.log(chalk.bold('Fetching current ticket...'))
           const currentIssue = await readIssue(apiKey, issueId)
+
+          let activeTicketsContext: string | undefined
+          if (opts.withContext) {
+            console.log(chalk.bold('Fetching other active tickets for context...'))
+            try {
+              const activeIssues = await getActiveIssues(apiKey, config.linearTeamId)
+              // Exclude the current ticket from context
+              const otherActiveIssues = activeIssues.filter(issue => issue.id !== currentIssue.id)
+              activeTicketsContext = formatTicketsForContext(otherActiveIssues)
+              console.log(chalk.green(`✓ Found ${otherActiveIssues.length} other active ticket(s) for context`))
+            } catch (error) {
+              console.warn(chalk.yellow(`Warning: Failed to fetch active tickets: ${error instanceof Error ? error.message : String(error)}`))
+              console.warn(chalk.yellow('Continuing without context...'))
+            }
+          }
           
           const styleLabel = ticketStyle === 'tldr' ? 'TLDR' : ticketStyle === 'detailed' ? 'Detailed' : 'Descriptive'
-          console.log(chalk.bold(`Improving ticket with AI (${styleLabel} style)...`))
+          const contextLabel = opts.withContext ? ' (with context)' : ''
+          console.log(chalk.bold(`Improving ticket with AI (${styleLabel} style${contextLabel})...`))
           try {
             const improved = await editTicketWithAI(
               config.anthropicApiKey,
               currentIssue.title,
               currentIssue.description || '',
               opts.ai,
-              ticketStyle
+              ticketStyle,
+              activeTicketsContext
             )
             titleUpdate = improved.title
             descriptionUpdate = improved.description

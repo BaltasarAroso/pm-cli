@@ -97,6 +97,29 @@ export async function listIssues(
   return result.issues.nodes
 }
 
+/**
+ * Get active issues (not done, cancelled, or deleted) for context.
+ * Used to avoid duplicates and provide context when creating/editing tickets.
+ */
+export async function getActiveIssues(apiKey: string, teamId?: string): Promise<LinearIssue[]> {
+  const query = `
+    query($filter: IssueFilter) {
+      issues(filter: $filter, first: 100, orderBy: updatedAt) {
+        nodes { ${ISSUE_FIELDS} }
+      }
+    }
+  `
+  const filter: Record<string, unknown> = {}
+  if (teamId) filter.team = { id: { eq: teamId } }
+  // Exclude done/cancelled states - only get active tickets
+  filter.state = {
+    type: { nin: ['completed', 'canceled'] }
+  }
+
+  const result = await linearQuery<{ issues: { nodes: LinearIssue[] } }>(apiKey, query, { filter })
+  return result.issues.nodes
+}
+
 export async function createIssue(
   apiKey: string,
   teamId: string,

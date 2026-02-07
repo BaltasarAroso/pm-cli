@@ -71,11 +71,12 @@ export async function generateTicketWithAI(
   apiKey: string,
   userInput: string,
   style: TicketStyle = 'descriptive',
-  context?: string
+  context?: string,
+  activeTickets?: string
 ): Promise<TicketContent> {
   const client = new Anthropic({ apiKey })
 
-  const userPrompt = buildTicketCreatePrompt(userInput, style, context)
+  const userPrompt = buildTicketCreatePrompt(userInput, style, context, activeTickets)
   const systemPrompt = getTicketSystemPrompt(style)
 
   const response = await client.messages.create({
@@ -122,11 +123,12 @@ export async function editTicketWithAI(
   currentTitle: string,
   currentDescription: string,
   userRequest: string,
-  style: TicketStyle = 'descriptive'
+  style: TicketStyle = 'descriptive',
+  activeTickets?: string
 ): Promise<TicketContent> {
   const client = new Anthropic({ apiKey })
 
-  const userPrompt = buildTicketEditPrompt(currentTitle, currentDescription, userRequest, style)
+  const userPrompt = buildTicketEditPrompt(currentTitle, currentDescription, userRequest, style, activeTickets)
   const systemPrompt = getTicketSystemPrompt(style)
 
   const response = await client.messages.create({

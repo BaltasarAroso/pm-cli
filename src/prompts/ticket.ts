@@ -51,12 +51,37 @@ ${style === 'detailed' ? '- Include specific codebase references, file paths, an
 Return ONLY a JSON object. No markdown wrapping, no explanation.`
 }
 
+export function formatTicketsForContext(issues: Array<{ identifier: string; title: string; description?: string; state: { name: string } }>): string {
+  if (issues.length === 0) {
+    return 'No active tickets found.'
+  }
+
+  const lines = [`Active tickets (${issues.length}):`, '']
+  for (const issue of issues) {
+    lines.push(`${issue.identifier}: ${issue.title}`)
+    lines.push(`  Status: ${issue.state.name}`)
+    if (issue.description) {
+      const desc = issue.description.length > 200 
+        ? issue.description.substring(0, 200) + '...'
+        : issue.description
+      lines.push(`  Description: ${desc}`)
+    }
+    lines.push('')
+  }
+  return lines.join('\n')
+}
+
 export function buildTicketCreatePrompt(
   userInput: string,
   style: TicketStyle = 'descriptive',
-  context?: string
+  context?: string,
+  activeTickets?: string
 ): string {
   let prompt = `Create a Linear ticket based on the following user input:\n\n${userInput}`
+  
+  if (activeTickets) {
+    prompt += `\n\n<existing_active_tickets>\n${activeTickets}\n</existing_active_tickets>\n\nIMPORTANT: Review the existing active tickets above to:\n- Avoid creating duplicate tickets\n- Reference related work if applicable\n- Ensure the new ticket is distinct and adds value\n- Consider if this should be a comment on an existing ticket instead`
+  }
   
   if (context) {
     prompt += `\n\nAdditional context:\n${context}`
@@ -77,7 +102,8 @@ export function buildTicketEditPrompt(
   currentTitle: string,
   currentDescription: string,
   userRequest: string,
-  style: TicketStyle = 'descriptive'
+  style: TicketStyle = 'descriptive',
+  activeTickets?: string
 ): string {
   const styleInstructions = {
     tldr: 'Keep the updated ticket brief and TLDR-style - short and sweet, essentials only.',
@@ -85,16 +111,22 @@ export function buildTicketEditPrompt(
     detailed: 'Make the ticket comprehensive and detailed - include extensive context, codebase references, and thorough technical details.'
   }
 
-  return `Improve and update the following Linear ticket based on the user's request.
+  let prompt = `Improve and update the following Linear ticket based on the user's request.
 
 Current ticket:
 Title: ${currentTitle}
 Description:
 ${currentDescription}
 
-User's request: ${userRequest}
+User's request: ${userRequest}`
 
-${styleInstructions[style]}
+  if (activeTickets) {
+    prompt += `\n\n<other_active_tickets>\n${activeTickets}\n</other_active_tickets>\n\nIMPORTANT: Consider related active tickets when updating. Ensure the updated ticket:\n- Doesn't duplicate work already covered in other tickets\n- References related tickets if applicable\n- Maintains consistency with the team's active work`
+  }
+
+  prompt += `\n\n${styleInstructions[style]}
 
 Update the ticket to address the user's request while maintaining clarity and structure. Return the updated title and description as JSON.`
+
+  return prompt
 }
