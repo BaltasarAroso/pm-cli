@@ -1,0 +1,126 @@
+#!/usr/bin/env sh
+
+# Run linting and type checking
+echo "🔍 Running lint checks..."
+npm run lint || {
+  echo "❌ Lint checks failed. Please fix errors before committing."
+  exit 1
+}
+
+# Check for security vulnerabilities
+echo "🔍 Running security audit..."
+npm audit --audit-level=moderate || {
+  echo "⚠️  Security vulnerabilities found. Run 'npm audit' for details."
+  echo "   You can bypass with: git commit --no-verify (not recommended)"
+  exit 1
+}
+
+# Check for potential secrets in staged files
+echo "🔍 Checking for secrets..."
+
+# Get list of staged files
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
+
+# Check each staged file
+FOUND_SECRETS=0
+for file in $STAGED_FILES; do
+  # Skip .env.example (it's meant to have placeholders)
+  if [ "$file" = ".env.example" ]; then
+    continue
+  fi
+  
+  # Check file content against common secret patterns
+  # Anthropic API keys
+  if git diff --cached "$file" | grep -qE "sk-ant-[a-zA-Z0-9]{32,}"; then
+    echo "❌ Potential Anthropic API key found in $file"
+    FOUND_SECRETS=1
+  fi
+  
+  # Linear API keys
+  if git diff --cached "$file" | grep -qE "lin_api_[a-zA-Z0-9]{32,}"; then
+    echo "❌ Potential Linear API key found in $file"
+    FOUND_SECRETS=1
+  fi
+  
+  # GitHub tokens
+  if git diff --cached "$file" | grep -qE "(ghp_|gho_|ghu_|ghs_|ghr_)[a-zA-Z0-9]{36}"; then
+    echo "❌ Potential GitHub token found in $file"
+    FOUND_SECRETS=1
+  fi
+  
+  # AWS access keys (not used in this repo - extra security guarantee)
+  if git diff --cached "$file" | grep -qE "AKIA[0-9A-Z]{16}"; then
+    echo "❌ Potential AWS access key found in $file"
+    FOUND_SECRETS=1
+  fi
+  
+  # Google API keys (not used in this repo - extra security guarantee)
+  if git diff --cached "$file" | grep -qE "AIza[0-9A-Za-z\\-_]{35}"; then
+    echo "❌ Potential Google API key found in $file"
+    FOUND_SECRETS=1
+  fi
+  
+  # Database connection strings (not used in this repo - extra security guarantee)
+  if git diff --cached "$file" | grep -qiE "(postgres|mysql|mongodb)://[^:]+:[^@]+@"; then
+    echo "❌ Potential database connection string with credentials found in $file"
+    FOUND_SECRETS=1
+  fi
+  
+  # JWT secrets (not used in this repo - extra security guarantee)
+  if git diff --cached "$file" | grep -qiE "jwt[_-]?secret\s*[=:]\s*['\"]?[^'\"\s]{20,}"; then
+    echo "❌ Potential JWT secret found in $file"
+    FOUND_SECRETS=1
+  fi
+  
+  # OAuth client secrets (not used in this repo - extra security guarantee)
+  if git diff --cached "$file" | grep -qiE "client[_-]?secret\s*[=:]\s*['\"]?[^'\"\s]{20,}"; then
+    echo "❌ Potential OAuth client secret found in $file"
+    FOUND_SECRETS=1
+  fi
+  
+  # Slack webhook URLs (not used in this repo - extra security guarantee)
+  if git diff --cached "$file" | grep -qE "https://hooks\.slack\.com/services/[A-Z0-9]+/[A-Z0-9]+/[A-Z0-9]+"; then
+    echo "❌ Potential Slack webhook URL found in $file"
+    FOUND_SECRETS=1
+  fi
+  
+  # Stripe keys (not used in this repo - extra security guarantee)
+  if git diff --cached "$file" | grep -qE "sk_(live|test)_[0-9a-zA-Z]{24,32}"; then
+    echo "❌ Potential Stripe API key found in $file"
+    FOUND_SECRETS=1
+  fi
+  
+  # Private keys (not used in this repo - extra security guarantee)
+  # Skip checking the hook file itself to avoid false positives from comment text
+  if [ "$file" != ".husky/pre-commit" ]; then
+    if git diff --cached "$file" | grep -q "BEGIN.*PRIVATE KEY"; then
+      echo "❌ Potential private key found in $file"
+      FOUND_SECRETS=1
+    fi
+  fi
+  
+  # .env files (should never be committed, except .env.example)
+  if echo "$file" | grep -qE "\.env$" && [ "$file" != ".env.example" ]; then
+    echo "❌ .env file detected in $file - these should never be committed!"
+    FOUND_SECRETS=1
+  fi
+  
+  # Generic API keys (be careful with this one - might have false positives)
+  if git diff --cached "$file" | grep -qiE "api[_-]?key\s*[=:]\s*['\"]?[^'\"\s]{32,}"; then
+    # Skip if it's in .env.example or has placeholder
+    if ! git diff --cached "$file" | grep -qE "(sk-ant-\.\.\.|lin_api_\.\.\.|example|placeholder|your-|replace)"; then
+      echo "❌ Potential API key found in $file"
+      FOUND_SECRETS=1
+    fi
+  fi
+done
+
+if [ $FOUND_SECRETS -eq 1 ]; then
+  echo ""
+  echo "⚠️  Commit blocked: Potential secrets detected!"
+  echo "   If this is a false positive, you can bypass with: git commit --no-verify"
+  echo "   But please double-check - secrets should NEVER be committed!"
+  exit 1
+fi
+
+echo "✅ No secrets detected. Proceeding with commit..."
