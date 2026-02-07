@@ -1,0 +1,29 @@
+{
+  "name": "coder-cli",
+  "version": "1.0.0",
+  "description": "AI-powered code review and Linear ticket management CLI",
+  "type": "module",
+  "bin": {
+    "coder": "./bin/coder.js"
+  },
+  "scripts": {
+    "start": "tsx bin/coder.ts",
+    "build": "tsc",
+    "lint": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "chalk": "^5.4.1",
+    "commander": "^13.1.0",
+    "dotenv": "^16.4.7",
+    "inquirer": "^12.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.7.0"
+  }
+}
