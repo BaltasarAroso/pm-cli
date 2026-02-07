@@ -189,6 +189,28 @@ export async function linkPR(
   await updateIssue(apiKey, teamId, issueId, { comment: `🔗 Linked PR: ${prUrl}` })
 }
 
+export interface LinearTeam {
+  id: string
+  name: string
+  key: string
+}
+
+export async function listTeams(apiKey: string): Promise<LinearTeam[]> {
+  const query = `
+    query {
+      teams {
+        nodes {
+          id
+          name
+          key
+        }
+      }
+    }
+  `
+  const result = await linearQuery<{ teams: { nodes: LinearTeam[] } }>(apiKey, query)
+  return result.teams.nodes
+}
+
 export function formatIssue(issue: LinearIssue): string {
   const labels = issue.labels?.nodes.map((l) => l.name).join(', ') || 'None'
   const assignee = issue.assignee

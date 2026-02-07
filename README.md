@@ -84,7 +84,8 @@ coder review 430 --env myproject  # use myproject profile
 ### Linear
 
 ```bash
-coder linear list                               # list all tickets
+coder linear teams                               # list all teams with their IDs
+coder linear list                                # list all tickets
 coder linear list "In Progress"                 # filter by status
 coder linear read PROJ-123                      # read ticket details
 coder linear create "Fix bug" --description "Details here"
@@ -145,6 +146,14 @@ You'll need the following API keys to use all features:
 - **Linear API key** - Required for Linear ticket management
   - Get yours at: https://linear.app/settings/api
 - **Linear Team ID** - Required for creating/updating Linear issues
+  - **How to find your Team ID:**
+    - **Easy way**: Run `coder linear teams` to list all teams with their IDs
+    - **Manual way**: 
+      1. Go to your Linear workspace settings: https://linear.app/settings/teams
+      2. Click on the team you want to use
+      3. The Team ID is in the URL: `https://linear.app/settings/teams/<TEAM_ID>`
+      4. Alternatively, you can find it in the team's API settings page
+      5. The Team ID is a UUID (e.g., `a1b2c3d4-e5f6-7890-abcd-ef1234567890`)
 
 ## License
 

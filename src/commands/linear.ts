@@ -8,6 +8,7 @@ import {
   updateIssue,
   linkPR,
   formatIssue,
+  listTeams,
 } from '../lib/linear-api.js'
 import { generateTicketWithAI, editTicketWithAI } from '../lib/anthropic.js'
 import type { TicketStyle } from '../prompts/ticket.js'
@@ -28,17 +29,21 @@ export function registerLinearCommand(program: Command): void {
   linear
     .command('list [status]')
     .description('List issues, optionally filtered by status')
-    .option('--team <teamId>', 'Filter by team ID')
+    .option('--team <teamId>', 'Filter by team ID (overrides LINEAR_TEAM_ID from config)')
+    .option('--all-teams', 'List issues from all teams (ignores LINEAR_TEAM_ID)')
     .option('--env <profile>', 'Use a named configuration profile')
-    .action(async (status: string | undefined, opts: { team?: string; env?: string }) => {
+    .action(async (status: string | undefined, opts: { team?: string; allTeams?: boolean; env?: string }) => {
       const config = loadConfig(opts.env)
       const apiKey = requireLinearKey(config.linearApiKey)
 
-      if (status) console.log(`Filtering by status: "${status}"`)
-      if (opts.team) console.log(`Filtering by team: ${opts.team}`)
-      if (!status && !opts.team) console.log('Listing all issues')
+      // Determine which team ID to use: explicit --team flag, or LINEAR_TEAM_ID from config, or none
+      const teamId = opts.team || (opts.allTeams ? undefined : config.linearTeamId)
 
-      const issues = await listIssues(apiKey, status, opts.team)
+      if (status) console.log(`Filtering by status: "${status}"`)
+      if (teamId) console.log(`Filtering by team: ${teamId}`)
+      if (!status && !teamId) console.log('Listing all issues')
+
+      const issues = await listIssues(apiKey, status, teamId)
 
       if (issues.length === 0) {
         console.log(chalk.yellow('\nNo issues found.'))
@@ -65,6 +70,38 @@ export function registerLinearCommand(program: Command): void {
 
       const issue = await readIssue(apiKey, issueId)
       console.log(formatIssue(issue))
+    })
+
+  // --- teams ---
+  linear
+    .command('teams')
+    .description('List all teams with their IDs (useful for finding LINEAR_TEAM_ID)')
+    .option('--env <profile>', 'Use a named configuration profile')
+    .action(async (opts: { env?: string }) => {
+      const config = loadConfig(opts.env)
+      const apiKey = requireLinearKey(config.linearApiKey)
+
+      console.log(chalk.bold('Fetching teams...'))
+      try {
+        const teams = await listTeams(apiKey)
+
+        if (teams.length === 0) {
+          console.log(chalk.yellow('\nNo teams found.'))
+          return
+        }
+
+        console.log(`\nFound ${teams.length} team(s):\n`)
+        for (const team of teams) {
+          console.log(`  ${chalk.bold(team.name)}`)
+          console.log(`    Key: ${chalk.dim(team.key)}`)
+          console.log(`    ID:  ${chalk.green(team.id)}`)
+          console.log('')
+        }
+        console.log(chalk.dim('Copy the ID above and set it as LINEAR_TEAM_ID in your .env file.'))
+      } catch (error) {
+        console.error(chalk.red(`Failed to fetch teams: ${error instanceof Error ? error.message : String(error)}`))
+        process.exit(1)
+      }
     })
 
   // --- create ---
