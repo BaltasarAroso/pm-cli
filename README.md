@@ -1,6 +1,6 @@
-# coder
+# pm
 
-AI-powered code review and Linear ticket management CLI tool. Automate code reviews using Anthropic's Claude API and manage your Linear tickets directly from the command line.
+AI-powered project management CLI - code reviews and Linear ticket management. Automate code reviews using Anthropic's Claude API and manage your Linear tickets directly from the command line.
 
 ## Features
 
@@ -31,9 +31,9 @@ Before installing, ensure you have the following tools installed and configured:
 
 ```bash
 git clone <repository-url>
-cd coder-cli
+cd pm-cli
 npm install
-npm link    # makes 'coder' available globally
+npm link    # makes 'pm' available globally
 ```
 
 ## Setup
@@ -53,21 +53,21 @@ LINEAR_TEAM_ID=...                 # For creating/updating issues
 Create profiles for different projects or environments:
 
 ```bash
-coder config init                  # creates ~/.config/coder-cli/profiles/
+pm config init                  # creates ~/.config/pm-cli/profiles/
 ```
 
 Then create profiles per project:
 
 ```bash
-cp ~/.config/coder-cli/profiles/default.env ~/.config/coder-cli/profiles/myproject.env
+cp ~/.config/pm-cli/profiles/default.env ~/.config/pm-cli/profiles/myproject.env
 # Edit myproject.env with project-specific credentials
 ```
 
 Use with `--env`:
 
 ```bash
-coder review --env myproject
-coder linear list --env myproject
+pm review --env myproject
+pm linear list --env myproject
 ```
 
 ## Usage
@@ -75,29 +75,29 @@ coder linear list --env myproject
 ### Code Review
 
 ```bash
-coder review                    # auto-detect PR on current branch
-coder review 430                # review PR #430
-coder review 430 --post         # review + approve + post comments to GitHub
-coder review 430 --env myproject  # use myproject profile
+pm review                    # auto-detect PR on current branch
+pm review 430                # review PR #430
+pm review 430 --post         # review + approve + post comments to GitHub
+pm review 430 --env myproject  # use myproject profile
 ```
 
 ### Linear
 
 ```bash
-coder linear teams                               # list all teams with their IDs
-coder linear list                                # list all tickets
-coder linear list "In Progress"                 # filter by status
-coder linear read PROJ-123                      # read ticket details
-coder linear create "Fix bug" --description "Details here"
-coder linear create --ai "Add user authentication with JWT tokens"  # AI-generated ticket
-coder linear create --ai "Fix login bug" --style tldr              # Short and sweet
-coder linear create --ai "Implement OAuth" --style detailed        # Comprehensive with codebase details
-coder linear create --ai "Add feature X" --with-context           # AI-generated with active tickets context (avoids duplicates)
-coder linear update PROJ-123 --status "Done"
-coder linear update PROJ-123 --comment "Fixed in PR #456"
-coder linear update PROJ-123 --ai "Add acceptance criteria" --style descriptive  # AI-improved ticket
-coder linear update PROJ-123 --ai "Improve description" --with-context  # AI-improved with context from other active tickets
-coder linear link PROJ-123 https://github.com/owner/repo/pull/456
+pm linear teams                               # list all teams with their IDs
+pm linear list                                # list all tickets
+pm linear list "In Progress"                 # filter by status
+pm linear read PROJ-123                      # read ticket details
+pm linear create "Fix bug" --description "Details here"
+pm linear create --ai "Add user authentication with JWT tokens"  # AI-generated ticket
+pm linear create --ai "Fix login bug" --style tldr              # Short and sweet
+pm linear create --ai "Implement OAuth" --style detailed        # Comprehensive with codebase details
+pm linear create --ai "Add feature X" --with-context           # AI-generated with active tickets context (avoids duplicates)
+pm linear update PROJ-123 --status "Done"
+pm linear update PROJ-123 --comment "Fixed in PR #456"
+pm linear update PROJ-123 --ai "Add acceptance criteria" --style descriptive  # AI-improved ticket
+pm linear update PROJ-123 --ai "Improve description" --with-context  # AI-improved with context from other active tickets
+pm linear link PROJ-123 https://github.com/owner/repo/pull/456
 ```
 
 **Ticket Styles** (for `--ai` option):
@@ -108,8 +108,8 @@ coder linear link PROJ-123 https://github.com/owner/repo/pull/456
 ### Config
 
 ```bash
-coder config init     # create profiles directory + sample
-coder config list     # list available profiles
+pm config init     # create profiles directory + sample
+pm config list     # list available profiles
 ```
 
 ## How it works
@@ -141,7 +141,7 @@ coder config list     # list available profiles
 ### Config Resolution
 
 1. Loads `.env` from current working directory
-2. If `--env <name>` is passed, overlays with `~/.config/coder-cli/profiles/<name>.env`
+2. If `--env <name>` is passed, overlays with `~/.config/pm-cli/profiles/<name>.env`
 3. Shell environment variables take precedence over both
 
 ## API Keys
@@ -154,7 +154,7 @@ You'll need the following API keys to use all features:
   - Get yours at: https://linear.app/settings/api
 - **Linear Team ID** - Required for creating/updating Linear issues
   - **How to find your Team ID:**
-    - **Easy way**: Run `coder linear teams` to list all teams with their IDs
+    - **Easy way**: Run `pm linear teams` to list all teams with their IDs
     - **Manual way**: 
       1. Go to your Linear workspace settings: https://linear.app/settings/teams
       2. Click on the team you want to use

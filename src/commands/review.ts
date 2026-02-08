@@ -15,7 +15,7 @@ import {
   postReview,
   detectRepoFromGit,
 } from '../lib/github.js'
-import type { ReviewFinding, ReviewFile, CoderConfig } from '../lib/types.js'
+import type { ReviewFinding, ReviewFile, PmConfig } from '../lib/types.js'
 
 const SEVERITY_COLORS = {
   critical: chalk.red,
@@ -27,7 +27,7 @@ const SEVERITY_ORDER: Record<string, number> = { critical: 0, warning: 1, sugges
 
 // --- Helpers ---
 
-function loadGuidelines(config: CoderConfig): string {
+function loadGuidelines(config: PmConfig): string {
   const paths = [
     config.guidelinesPath,
     'CLAUDE.md',
@@ -285,7 +285,7 @@ export function registerReviewCommand(program: Command): void {
       }
 
       // Save review file
-      const reviewsDir = join(process.cwd(), '.coder', 'reviews')
+      const reviewsDir = join(process.cwd(), '.pm', 'reviews')
       mkdirSync(reviewsDir, { recursive: true })
       const reviewPath = join(reviewsDir, `pr-${pr.number}-review.json`)
       writeFileSync(reviewPath, JSON.stringify(reviewFile, null, 2) + '\n')

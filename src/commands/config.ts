@@ -44,7 +44,7 @@ export function registerConfigCommand(program: Command): void {
       console.log(`\nProfiles directory: ${dir}`)
       console.log('Create new profiles by adding .env files to this directory.')
       console.log('Example: cp default.env betanet.env && edit betanet.env')
-      console.log('\nThen use: coder review --env betanet')
+      console.log('\nThen use: pm review --env betanet')
     })
 
   cfg
@@ -55,7 +55,7 @@ export function registerConfigCommand(program: Command): void {
 
       if (profiles.length === 0) {
         console.log(chalk.yellow('No profiles found.'))
-        console.log('Run "coder config init" to create the profiles directory.')
+        console.log('Run "pm config init" to create the profiles directory.')
         return
       }
 

@@ -56,7 +56,7 @@ export interface LinearResponse<T> {
 
 // --- Config Types ---
 
-export interface CoderConfig {
+export interface PmConfig {
   anthropicApiKey?: string
   linearApiKey?: string
   linearTeamId?: string

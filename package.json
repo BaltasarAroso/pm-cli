@@ -1,13 +1,13 @@
 {
-  "name": "coder-cli",
+  "name": "pm-cli",
   "version": "1.0.0",
-  "description": "AI-powered code review and Linear ticket management CLI",
+  "description": "AI-powered project management CLI - code reviews and Linear ticket management",
   "type": "module",
   "bin": {
-    "coder": "./bin/coder.js"
+    "pm": "./bin/pm.js"
   },
   "scripts": {
-    "start": "tsx bin/coder.ts",
+    "start": "tsx bin/pm.ts",
     "build": "tsc",
     "lint": "tsc --noEmit",
     "prepare": "husky"

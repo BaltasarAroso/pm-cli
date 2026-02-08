@@ -2,19 +2,19 @@ import { config as dotenvConfig } from 'dotenv'
 import { existsSync, readdirSync } from 'fs'
 import { resolve, join } from 'path'
 import { homedir } from 'os'
-import type { CoderConfig } from './types.js'
+import type { PmConfig } from './types.js'
 
-const PROFILES_DIR = join(homedir(), '.config', 'coder-cli', 'profiles')
+const PROFILES_DIR = join(homedir(), '.config', 'pm-cli', 'profiles')
 
 /**
  * Load configuration from .env files and environment variables.
  *
  * Resolution order (later wins):
  * 1. Project .env from current working directory
- * 2. Named profile from ~/.config/coder-cli/profiles/<name>.env
+ * 2. Named profile from ~/.config/pm-cli/profiles/<name>.env
  * 3. Shell environment variables
  */
-export function loadConfig(profileName?: string): CoderConfig {
+export function loadConfig(profileName?: string): PmConfig {
   // 1. Load project .env from cwd
   const projectEnv = resolve(process.cwd(), '.env')
   if (existsSync(projectEnv)) {
@@ -26,7 +26,7 @@ export function loadConfig(profileName?: string): CoderConfig {
     const profilePath = join(PROFILES_DIR, `${profileName}.env`)
     if (!existsSync(profilePath)) {
       console.error(`Profile "${profileName}" not found at: ${profilePath}`)
-      console.error(`Run "coder config init" to create the profiles directory.`)
+      console.error(`Run "pm config init" to create the profiles directory.`)
       process.exit(1)
     }
     dotenvConfig({ path: profilePath, override: true })

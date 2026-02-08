@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const tsEntry = join(__dirname, 'coder.ts')
+const tsEntry = join(__dirname, 'pm.ts')
 const tsx = join(__dirname, '..', 'node_modules', '.bin', 'tsx')
 
 try {
