@@ -101,13 +101,13 @@ You can pass environment variables in the MCP client config:
 
 | Tool | Description |
 |------|-------------|
-| `linear_list_issues` | List issues, optionally filtered by status and/or team |
+| `linear_list_issues` | List issues, optionally filtered by status, team, or project |
 | `linear_read_issue` | Read full details of a specific issue |
 | `linear_create_issue` | Create a new issue with title and description |
 | `linear_update_issue` | Update status, add comment, change title/description |
 | `linear_link_pr` | Link a PR URL to an issue (adds a comment) |
 | `linear_list_teams` | List all teams with their IDs and keys |
-| `linear_get_active_issues` | Get active (non-completed) issues for context |
+| `linear_get_active_issues` | Get active (non-completed) issues for context (optional project/team filter) |
 
 ## Available prompts
 

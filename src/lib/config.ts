@@ -37,6 +37,7 @@ export function loadConfig(profileName?: string): PmConfig {
     anthropicApiKey: process.env.ANTHROPIC_API_KEY,
     linearApiKey: process.env.LINEAR_API_KEY,
     linearTeamId: process.env.LINEAR_TEAM_ID,
+    linearProjectId: process.env.LINEAR_PROJECT_ID,
     githubRepo: process.env.GITHUB_REPO,
     guidelinesPath: process.env.GUIDELINES_PATH,
   }

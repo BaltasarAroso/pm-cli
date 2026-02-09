@@ -79,7 +79,8 @@ export async function readIssue(apiKey: string, issueId: string): Promise<Linear
 export async function listIssues(
   apiKey: string,
   status?: string,
-  teamId?: string
+  teamId?: string,
+  projectId?: string
 ): Promise<LinearIssue[]> {
   const query = `
     query($filter: IssueFilter) {
@@ -90,6 +91,7 @@ export async function listIssues(
   `
   const filter: Record<string, unknown> = {}
   if (teamId) filter.team = { id: { eq: teamId } }
+  if (projectId) filter.project = { id: { eq: projectId } }
   if (status) filter.state = { name: { eq: status } }
 
   const variables = Object.keys(filter).length > 0 ? { filter } : {}
@@ -101,7 +103,11 @@ export async function listIssues(
  * Get active issues (not done, cancelled, or deleted) for context.
  * Used to avoid duplicates and provide context when creating/editing tickets.
  */
-export async function getActiveIssues(apiKey: string, teamId?: string): Promise<LinearIssue[]> {
+export async function getActiveIssues(
+  apiKey: string,
+  teamId?: string,
+  projectId?: string
+): Promise<LinearIssue[]> {
   const query = `
     query($filter: IssueFilter) {
       issues(filter: $filter, first: 100, orderBy: updatedAt) {
@@ -111,6 +117,7 @@ export async function getActiveIssues(apiKey: string, teamId?: string): Promise<
   `
   const filter: Record<string, unknown> = {}
   if (teamId) filter.team = { id: { eq: teamId } }
+  if (projectId) filter.project = { id: { eq: projectId } }
   // Exclude done/cancelled states - only get active tickets
   filter.state = {
     type: { nin: ['completed', 'canceled'] }

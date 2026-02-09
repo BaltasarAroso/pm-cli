@@ -30,22 +30,25 @@ export function registerLinearCommand(program: Command): void {
   // --- list ---
   linear
     .command('list [status]')
-    .description('List issues, optionally filtered by status')
+    .description('List issues, optionally filtered by status, team, or project')
     .option('--team <teamId>', 'Filter by team ID (overrides LINEAR_TEAM_ID from config)')
+    .option('--project <projectId>', 'Filter by Linear project ID (overrides LINEAR_PROJECT_ID from config)')
     .option('--all-teams', 'List issues from all teams (ignores LINEAR_TEAM_ID)')
     .option('--env <profile>', 'Use a named configuration profile')
-    .action(async (status: string | undefined, opts: { team?: string; allTeams?: boolean; env?: string }) => {
+    .action(async (status: string | undefined, opts: { team?: string; project?: string; allTeams?: boolean; env?: string }) => {
       const config = loadConfig(opts.env)
       const apiKey = requireLinearKey(config.linearApiKey)
 
       // Determine which team ID to use: explicit --team flag, or LINEAR_TEAM_ID from config, or none
       const teamId = opts.team || (opts.allTeams ? undefined : config.linearTeamId)
+      const projectId = opts.project || config.linearProjectId
 
       if (status) console.log(`Filtering by status: "${status}"`)
       if (teamId) console.log(`Filtering by team: ${teamId}`)
-      if (!status && !teamId) console.log('Listing all issues')
+      if (projectId) console.log(`Filtering by project: ${projectId}`)
+      if (!status && !teamId && !projectId) console.log('Listing all issues')
 
-      const issues = await listIssues(apiKey, status, teamId)
+      const issues = await listIssues(apiKey, status, teamId, projectId)
 
       if (issues.length === 0) {
         console.log(chalk.yellow('\nNo issues found.'))
@@ -152,7 +155,7 @@ export function registerLinearCommand(program: Command): void {
         if (opts.withContext) {
           console.log(chalk.bold('Fetching active tickets for context...'))
           try {
-            const activeIssues = await getActiveIssues(apiKey, config.linearTeamId)
+            const activeIssues = await getActiveIssues(apiKey, config.linearTeamId, config.linearProjectId)
             activeTicketsContext = formatTicketsForContext(activeIssues)
             console.log(chalk.green(`✓ Found ${activeIssues.length} active ticket(s) for context`))
           } catch (error) {
@@ -244,7 +247,7 @@ export function registerLinearCommand(program: Command): void {
           if (opts.withContext) {
             console.log(chalk.bold('Fetching other active tickets for context...'))
             try {
-              const activeIssues = await getActiveIssues(apiKey, config.linearTeamId)
+              const activeIssues = await getActiveIssues(apiKey, config.linearTeamId, config.linearProjectId)
               // Exclude the current ticket from context
               const otherActiveIssues = activeIssues.filter(issue => issue.id !== currentIssue.id)
               activeTicketsContext = formatTicketsForContext(otherActiveIssues)

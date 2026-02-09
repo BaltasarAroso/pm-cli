@@ -60,6 +60,7 @@ export interface PmConfig {
   anthropicApiKey?: string
   linearApiKey?: string
   linearTeamId?: string
+  linearProjectId?: string
   githubRepo?: string
   guidelinesPath?: string
 }

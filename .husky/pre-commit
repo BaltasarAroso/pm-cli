@@ -105,9 +105,8 @@ for file in $STAGED_FILES; do
     FOUND_SECRETS=1
   fi
   
-  # Generic API keys (be careful with this one - might have false positives)
-  if git diff --cached "$file" | grep -qiE "api[_-]?key\s*[=:]\s*['\"]?[^'\"\s]{32,}"; then
-    # Skip if it's in .env.example or has placeholder
+  # Generic API keys: only flag quoted string literals (real secrets), not variable/function references
+  if git diff --cached "$file" | grep -qiE "api[_-]?key\s*[=:]\s*['\"][^'\"]{32,}['\"]"; then
     if ! git diff --cached "$file" | grep -qE "(sk-ant-\.\.\.|lin_api_\.\.\.|example|placeholder|your-|replace)"; then
       echo "❌ Potential API key found in $file"
       FOUND_SECRETS=1

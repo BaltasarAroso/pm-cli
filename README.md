@@ -88,6 +88,7 @@ pm review 430 --env myproject  # use myproject profile
 pm linear teams                               # list all teams with their IDs
 pm linear list                                # list all tickets
 pm linear list "In Progress"                 # filter by status
+pm linear list --project <projectId>         # filter by Linear project (or set LINEAR_PROJECT_ID in profile)
 pm linear read PROJ-123                      # read ticket details
 pm linear create "Fix bug" --description "Details here"
 pm linear create --ai "Add user authentication with JWT tokens"  # AI-generated ticket
@@ -191,6 +192,13 @@ You'll need the following API keys to use all features:
       3. The Team ID is in the URL: `https://linear.app/settings/teams/<TEAM_ID>`
       4. Alternatively, you can find it in the team's API settings page
       5. The Team ID is a UUID (e.g., `a1b2c3d4-e5f6-7890-abcd-ef1234567890`)
+- **Linear Project ID** (optional) - Filter list/active issues by project (e.g. a specific product or initiative)
+  - **How to find your Project ID:**
+    1. In Linear, open the project you want to track (e.g. from the project list or a link like `linear.app/<workspace>/project/<name>-<id>/overview`).
+    2. Press `Ctrl+K` (Windows/Linux) or `Cmd+K` (Mac) to open the command palette.
+    3. Type **“Copy model UUID”** and run it — the project’s UUID is now on your clipboard.
+    4. Alternatively: open the project, click the **⋯** menu → **Settings** (or **Project settings**), and copy the **Project ID** if shown.
+    5. Set `LINEAR_PROJECT_ID=<uuid>` in your profile `.env`, or use `pm linear list --project <uuid>`.
 
 ## License
 

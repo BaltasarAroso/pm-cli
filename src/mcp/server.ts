@@ -275,19 +275,21 @@ export function createMcpServer(): McpServer {
 
   server.tool(
     'linear_list_issues',
-    'List Linear issues, optionally filtered by status and/or team',
+    'List Linear issues, optionally filtered by status, team, or project',
     {
       status: z.string().optional().describe('Filter by status name (e.g. "In Progress", "Todo")'),
       team_id: z.string().optional().describe('Filter by team ID (overrides LINEAR_TEAM_ID from config)'),
+      project_id: z.string().optional().describe('Filter by Linear project ID (e.g. from project URL; overrides LINEAR_PROJECT_ID from config)'),
       profile: z.string().optional().describe('Named configuration profile to use'),
     },
-    async ({ status, team_id, profile }) => {
+    async ({ status, team_id, project_id, profile }) => {
       try {
         const config = getConfig(profile)
         const apiKey = requireLinearKey(config)
         const teamId = team_id || config.linearTeamId
+        const projectId = project_id || config.linearProjectId
 
-        const issues = await listIssues(apiKey, status, teamId)
+        const issues = await listIssues(apiKey, status, teamId, projectId)
         if (issues.length === 0) {
           return { content: [{ type: 'text', text: 'No issues found.' }] }
         }
@@ -486,15 +488,17 @@ export function createMcpServer(): McpServer {
     'Get active (non-completed, non-cancelled) Linear issues for context. Useful when creating or editing tickets to avoid duplicates.',
     {
       team_id: z.string().optional().describe('Filter by team ID (overrides LINEAR_TEAM_ID from config)'),
+      project_id: z.string().optional().describe('Filter by Linear project ID (overrides LINEAR_PROJECT_ID from config)'),
       profile: z.string().optional().describe('Named configuration profile to use'),
     },
-    async ({ team_id, profile }) => {
+    async ({ team_id, project_id, profile }) => {
       try {
         const config = getConfig(profile)
         const apiKey = requireLinearKey(config)
         const teamId = team_id || config.linearTeamId
+        const projectId = project_id || config.linearProjectId
 
-        const issues = await getActiveIssues(apiKey, teamId)
+        const issues = await getActiveIssues(apiKey, teamId, projectId)
         if (issues.length === 0) {
           return { content: [{ type: 'text', text: 'No active issues found.' }] }
         }
