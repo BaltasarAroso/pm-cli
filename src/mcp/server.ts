@@ -592,11 +592,93 @@ export function createMcpServer(): McpServer {
 }
 
 // ---------------------------------------------------------------------------
+// Server metadata – keeps tool & prompt lists in sync automatically
+// ---------------------------------------------------------------------------
+
+export const MCP_TOOLS = [
+  { name: 'github_detect_pr', description: 'Detect the PR for the current git branch' },
+  { name: 'github_list_prs', description: 'List open pull requests' },
+  { name: 'github_get_pr_info', description: 'Get detailed info about a PR' },
+  { name: 'github_get_pr_diff', description: 'Get the full diff for a PR' },
+  { name: 'github_get_changed_files', description: 'Get changed files summary for a PR' },
+  { name: 'github_post_review', description: 'Post a code review to a PR' },
+  { name: 'github_detect_repo', description: 'Detect owner/repo from git remote' },
+  { name: 'linear_list_issues', description: 'List Linear issues' },
+  { name: 'linear_read_issue', description: 'Read a specific Linear issue' },
+  { name: 'linear_create_issue', description: 'Create a new Linear issue' },
+  { name: 'linear_update_issue', description: 'Update an existing Linear issue' },
+  { name: 'linear_link_pr', description: 'Link a PR to a Linear issue' },
+  { name: 'linear_list_teams', description: 'List Linear teams' },
+  { name: 'linear_get_active_issues', description: 'Get active (non-completed) issues' },
+] as const
+
+export const MCP_PROMPTS = [
+  { name: 'code_review', description: 'Structured code review prompt template' },
+  { name: 'create_ticket', description: 'Linear ticket creation prompt template' },
+] as const
+
+// ---------------------------------------------------------------------------
+// Logging helper – always writes to stderr to avoid corrupting stdio transport
+// ---------------------------------------------------------------------------
+
+function log(message: string): void {
+  process.stderr.write(`${message}\n`)
+}
+
+// ---------------------------------------------------------------------------
 // Standalone entry point - run the MCP server over stdio
 // ---------------------------------------------------------------------------
 
 export async function startMcpServer(): Promise<void> {
+  log('')
+  log('╔══════════════════════════════════════════════════════════╗')
+  log('║              pm-cli MCP Server v1.0.0                    ║')
+  log('╚══════════════════════════════════════════════════════════╝')
+  log('')
+  log(`  Tools registered:  ${MCP_TOOLS.length}`)
+  log(`  Prompts registered: ${MCP_PROMPTS.length}`)
+  log(`  Transport:         stdio`)
+  log('')
+  log('  GitHub tools:')
+  for (const t of MCP_TOOLS.filter((t) => t.name.startsWith('github_'))) {
+    log(`    • ${t.name} — ${t.description}`)
+  }
+  log('')
+  log('  Linear tools:')
+  for (const t of MCP_TOOLS.filter((t) => t.name.startsWith('linear_'))) {
+    log(`    • ${t.name} — ${t.description}`)
+  }
+  log('')
+  log('  Prompts:')
+  for (const p of MCP_PROMPTS) {
+    log(`    • ${p.name} — ${p.description}`)
+  }
+  log('')
+  log('  Waiting for MCP client connection on stdio...')
+  log('  (This process is meant to be launched by an AI client like Cursor or Claude Desktop)')
+  log('  Press Ctrl+C to stop.')
+  log('')
+
   const server = createMcpServer()
   const transport = new StdioServerTransport()
+
+  // Handle graceful shutdown
+  process.on('SIGINT', () => {
+    log('\n  Shutting down MCP server...')
+    server.close().then(() => {
+      log('  Server stopped.')
+      process.exit(0)
+    })
+  })
+
+  process.on('SIGTERM', () => {
+    log('\n  Shutting down MCP server...')
+    server.close().then(() => {
+      log('  Server stopped.')
+      process.exit(0)
+    })
+  })
+
   await server.connect(transport)
+  log('  MCP client connected.')
 }

@@ -34,7 +34,7 @@ Before installing, ensure you have the following tools installed and configured:
 git clone <repository-url>
 cd pm-cli
 npm install
-npm link    # makes 'pm' available globally
+npm link    # makes 'pm' and 'pm-mcp' available globally
 ```
 
 ## Setup
@@ -118,10 +118,13 @@ pm config list     # list available profiles
 pm-cli also runs as an [MCP](https://modelcontextprotocol.io/) server, letting AI clients like **Cursor**, **Claude Desktop**, and others use its GitHub and Linear tools directly through chat.
 
 ```bash
-pm mcp   # starts the MCP server (stdio transport)
+pm mcp          # starts the MCP server (stdio transport)
+pm mcp --list   # list available tools and prompts without starting the server
 ```
 
-Add to your AI client config (e.g. `.cursor/mcp.json`):
+> **Note:** You don't need to run `pm mcp` manually. Your AI client launches and manages the server automatically based on its config. The command is useful for debugging or verifying the server starts correctly.
+
+Add to your AI client config (e.g. `.cursor/mcp.json` or `~/.cursor/mcp.json` for global):
 
 ```json
 {
@@ -132,6 +135,8 @@ Add to your AI client config (e.g. `.cursor/mcp.json`):
   }
 }
 ```
+
+Restart or reload your AI client, and the tools will be available immediately.
 
 This exposes 14 tools (`github_detect_pr`, `linear_create_issue`, etc.) and 2 prompt templates (`code_review`, `create_ticket`) that the AI can use on your behalf.
 

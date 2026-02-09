@@ -32,7 +32,28 @@ registerConfigCommand(program)
 program
   .command('mcp')
   .description('Start the MCP server (stdio transport) for AI client integration')
-  .action(async () => {
+  .option('-l, --list', 'List available MCP tools and prompts without starting the server')
+  .action(async (opts: { list?: boolean }) => {
+    if (opts.list) {
+      const { MCP_TOOLS, MCP_PROMPTS } = await import('../src/mcp/server.js')
+      console.log('\npm-cli MCP Server — Available capabilities\n')
+      console.log('GitHub tools:')
+      for (const t of MCP_TOOLS.filter((t) => t.name.startsWith('github_'))) {
+        console.log(`  • ${t.name} — ${t.description}`)
+      }
+      console.log('\nLinear tools:')
+      for (const t of MCP_TOOLS.filter((t) => t.name.startsWith('linear_'))) {
+        console.log(`  • ${t.name} — ${t.description}`)
+      }
+      console.log('\nPrompts:')
+      for (const p of MCP_PROMPTS) {
+        console.log(`  • ${p.name} — ${p.description}`)
+      }
+      console.log(`\nTotal: ${MCP_TOOLS.length} tools, ${MCP_PROMPTS.length} prompts`)
+      console.log('\nTo start the server: pm mcp')
+      console.log('To configure in Cursor: see pm-cli README or src/mcp/MCP.md\n')
+      return
+    }
     const { startMcpServer } = await import('../src/mcp/server.js')
     await startMcpServer()
   })
