@@ -28,4 +28,13 @@ registerReviewCommand(program)
 registerLinearCommand(program)
 registerConfigCommand(program)
 
+// MCP server mode
+program
+  .command('mcp')
+  .description('Start the MCP server (stdio transport) for AI client integration')
+  .action(async () => {
+    const { startMcpServer } = await import('../src/mcp/server.js')
+    await startMcpServer()
+  })
+
 program.parse()

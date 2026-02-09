@@ -4,7 +4,9 @@
   "description": "AI-powered project management CLI - code reviews and Linear ticket management",
   "type": "module",
   "bin": {
-    "pm": "./bin/pm.js"
+    "pm": "./bin/pm.js",
+    "coder": "./bin/pm.js",
+    "pm-mcp": "./bin/mcp.js"
   },
   "scripts": {
     "start": "tsx bin/pm.ts",
@@ -17,6 +19,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
+    "@modelcontextprotocol/sdk": "^1.26.0",
     "chalk": "^5.4.1",
     "commander": "^13.1.0",
     "dotenv": "^16.4.7",

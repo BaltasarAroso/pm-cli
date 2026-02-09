@@ -9,6 +9,7 @@ AI-powered project management CLI - code reviews and Linear ticket management. A
 - 📝 **Linear Integration** - Create, update, and manage Linear tickets from your terminal
 - 🔧 **Multi-Project Support** - Use named profiles to manage multiple projects
 - 💬 **GitHub Integration** - Post review comments directly to GitHub PRs
+- 🔌 **MCP Server** - Use tools from Cursor, Claude Desktop, or any MCP-compatible AI client ([docs](src/mcp/MCP.md))
 - ⚙️ **Flexible Configuration** - Support for project-level and global profiles
 
 ## Prerequisites
@@ -111,6 +112,30 @@ pm linear link PROJ-123 https://github.com/owner/repo/pull/456
 pm config init     # create profiles directory + sample
 pm config list     # list available profiles
 ```
+
+## MCP Server (AI client integration)
+
+pm-cli also runs as an [MCP](https://modelcontextprotocol.io/) server, letting AI clients like **Cursor**, **Claude Desktop**, and others use its GitHub and Linear tools directly through chat.
+
+```bash
+pm mcp   # starts the MCP server (stdio transport)
+```
+
+Add to your AI client config (e.g. `.cursor/mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "pm-cli": {
+      "command": "pm-mcp"
+    }
+  }
+}
+```
+
+This exposes 14 tools (`github_detect_pr`, `linear_create_issue`, etc.) and 2 prompt templates (`code_review`, `create_ticket`) that the AI can use on your behalf.
+
+See **[MCP.md](src/mcp/MCP.md)** for the full setup guide, tool reference, and example workflows.
 
 ## How it works
 
